@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Inno Setup — instalador final (vai para a release, nao para o repo)
+installer/Output/
+
+# Config local com caminhos de maquina: prefira commitar apenas app.ini.example.
+# O app.ini do repo deve conter apenas defaults.
+
+# Logs locais
+*.log
+
+# Midia gerada pelo uso (screenshots do docs/ sao excecao e entram via -f)
+*.mp4
+!docs/assets/screenshot.png

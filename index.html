@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GravaTrem — Trem de Gravar os Trem</title>
+<meta name="description" content="Gravador de tela open-source para Windows: tela, janela ou região + microfone e/ou áudio do sistema → MP4.">
+<link rel="icon" type="image/png" href="docs/assets/logo-256.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{
+  --bg:#141821; --bg2:#1a1e29; --panel:#222836; --card:#2b3245;
+  --txt:#e8eaf0; --muted:#9aa3b5; --red:#e5484d; --red2:#ff656b;
+  --green:#3ddc84; --cyan:#7bd0ff; --amber:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:"Montserrat",Arial,sans-serif;line-height:1.6;overflow-x:hidden}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+  background:rgba(20,24,33,.82);border-bottom:1px solid var(--card)}
+nav .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+nav img{width:34px;height:34px}
+nav .brand{font-weight:800;font-size:1.15rem}
+nav .brand span{color:var(--red)}
+nav .links{margin-left:auto;display:flex;gap:20px}
+nav .links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:.92rem}
+nav .links a:hover{color:var(--txt)}
+/* ---------- hero ---------- */
+.hero{position:relative;text-align:center;padding:96px 24px 72px;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:560px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(229,72,77,.22),transparent 60%);pointer-events:none}
+.hero img.logo{width:132px;height:132px;filter:drop-shadow(0 18px 40px rgba(229,72,77,.35))}
+.hero h1{font-size:clamp(2.4rem,6vw,3.8rem);font-weight:800;margin:20px 0 6px;letter-spacing:-.5px}
+.hero h1 span{color:var(--red)}
+.hero .tag{color:var(--muted);font-size:1.2rem;margin-bottom:8px}
+.hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 30px}
+.badge{font-size:.82rem;font-weight:600;color:var(--muted);border:1px solid var(--card);
+  border-radius:999px;padding:5px 14px}
+.badge i{margin-right:6px;color:var(--green)}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;background:var(--red);color:#fff;font-weight:700;
+  text-decoration:none;padding:15px 36px;border-radius:12px;font-size:1.05rem;
+  box-shadow:0 10px 30px rgba(229,72,77,.35);transition:transform .15s,background .15s}
+.btn:hover{background:var(--red2);transform:translateY(-2px)}
+.btn.ghost{background:var(--card);box-shadow:none;color:var(--txt)}
+.btn.ghost:hover{background:#343c52}
+/* ---------- sections ---------- */
+section{padding:56px 0}
+.sec-head{text-align:center;margin-bottom:32px}
+.sec-head h2{font-size:1.9rem;font-weight:800}
+.sec-head h2 i{color:var(--red);margin-right:10px}
+.sec-head p{color:var(--muted);margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--card);
+  border-radius:16px;padding:26px 22px;transition:transform .15s,border-color .15s}
+.card:hover{transform:translateY(-4px);border-color:var(--red)}
+.card .ic{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;margin-bottom:14px;background:rgba(229,72,77,.14);color:var(--red)}
+.card:nth-child(2) .ic{background:rgba(61,220,132,.12);color:var(--green)}
+.card:nth-child(3) .ic{background:rgba(123,208,255,.12);color:var(--cyan)}
+.card:nth-child(4) .ic{background:rgba(245,158,11,.12);color:var(--amber)}
+.card h3{font-size:1.05rem;margin-bottom:6px}
+.card p{color:var(--muted);font-size:.93rem}
+/* ---------- shot ---------- */
+.shot img{width:100%;border-radius:16px;border:1px solid var(--card);
+  box-shadow:0 30px 80px rgba(0,0,0,.5)}
+/* ---------- steps ---------- */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;counter-reset:step}
+.step{background:var(--panel);border:1px solid var(--card);border-radius:16px;padding:26px 22px;position:relative}
+.step::before{counter-increment:step;content:counter(step);position:absolute;top:-18px;left:22px;
+  width:38px;height:38px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.step h3{margin:6px 0;font-size:1.02rem}
+.step p,.step code{color:var(--muted);font-size:.92rem}
+code{background:#0e1119;padding:2px 8px;border-radius:6px;font-family:Consolas,monospace;color:var(--cyan)}
+.kbd{background:#0e1119;border:1px solid var(--card);border-bottom-width:3px;border-radius:6px;
+  padding:2px 10px;font-family:Consolas,monospace;font-size:.88rem}
+/* ---------- faq ---------- */
+details{background:var(--panel);border:1px solid var(--card);border-radius:12px;padding:16px 20px;margin:12px 0}
+details summary{cursor:pointer;font-weight:700;list-style:none;display:flex;align-items:center;gap:10px}
+details summary::-webkit-details-marker{display:none}
+details summary i{color:var(--red)}
+details p{color:var(--muted);margin-top:10px;font-size:.95rem}
+/* ---------- download ---------- */
+.dl{text-align:center;background:linear-gradient(180deg,var(--panel),var(--bg2));
+  border:1px solid var(--card);border-radius:20px;padding:56px 24px}
+.dl h2{font-size:2rem;margin-bottom:8px}
+.dl p{color:var(--muted);margin-bottom:26px}
+.dl .req{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:26px;color:var(--muted);font-size:.9rem}
+.dl .req i{color:var(--green);margin-right:6px}
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--card);text-align:center;color:var(--muted);
+  padding:32px 20px 44px;font-size:.9rem}
+footer a{color:var(--cyan);text-decoration:none}
+footer .social{display:flex;gap:16px;justify-content:center;margin-bottom:14px;font-size:1.3rem}
+footer .social a{color:var(--muted)}
+footer .social a:hover{color:var(--txt)}
+@media(max-width:640px){nav .links{display:none}.hero{padding:64px 20px 48px}}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <img src="docs/assets/logo-256.png" alt="GravaTrem">
+  <span class="brand">Grava<span>Trem</span></span>
+  <div class="links">
+    <a href="#recursos">Recursos</a>
+    <a href="#uso">Como usar</a>
+    <a href="#faq">FAQ</a>
+    <a href="#download">Download</a>
+  </div>
+</div></nav>
+
+<header class="hero">
+  <img class="logo" src="docs/assets/logo-256.png" alt="Marca GravaTrem: monitor com ponto REC">
+  <h1>Grava<span>Trem</span></h1>
+  <p class="tag">Trem de Gravar os Trem — o trem que grava os trem da sua tela.</p>
+  <div class="badges">
+    <span class="badge"><i class="fa-brands fa-windows"></i>Windows 10/11</span>
+    <span class="badge"><i class="fa-solid fa-gift"></i>Grátis</span>
+    <span class="badge"><i class="fa-solid fa-code-branch"></i>Open-source (MIT)</span>
+  </div>
+  <div class="cta">
+    <a class="btn" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem/releases"><i class="fa-solid fa-download"></i>Baixar instalador</a>
+    <a class="btn ghost" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem"><i class="fa-brands fa-github"></i>Ver código</a>
+  </div>
+</header>
+
+<section id="recursos"><div class="wrap">
+  <div class="sec-head">
+    <h2><i class="fa-solid fa-wand-magic-sparkles"></i>O que o trem faz</h2>
+    <p>Tudo que um gravador de tela precisa — sem complicação.</p>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="ic"><i class="fa-solid fa-display"></i></div>
+      <h3>3 alvos de captura</h3><p>Tela inteira com multi-monitor, janela específica ou região livre desenhada na tela.</p></div>
+    <div class="card"><div class="ic"><i class="fa-solid fa-microphone"></i></div>
+      <h3>Áudio completo</h3><p>Mic + sistema, só mic, só sistema ou só vídeo — com mixer ao vivo (VU, dB e osciloscópio).</p></div>
+    <div class="card"><div class="ic"><i class="fa-solid fa-chart-line"></i></div>
+      <h3>Painel de controle</h3><p>Histórico de gravações com duração, tamanho, totais e espaço em disco.</p></div>
+    <div class="card"><div class="ic"><i class="fa-solid fa-keyboard"></i></div>
+      <h3>Atalhos e barrinha</h3><p><span class="kbd">F12</span> gravar/parar, <span class="kbd">F11</span> foto PNG e barrinha flutuante com timer.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap shot">
+  <div class="sec-head">
+    <h2><i class="fa-solid fa-image"></i>Carinha do trem</h2>
+  </div>
+  <img src="docs/assets/screenshot.png" alt="Interface do GravaTrem">
+</div></section>
+
+<section id="uso"><div class="wrap">
+  <div class="sec-head">
+    <h2><i class="fa-solid fa-list-check"></i>Do zero ao MP4 em 3 passos</h2>
+  </div>
+  <div class="steps">
+    <div class="step"><h3>Instale</h3><p>Baixe o <code>GravaTrem-Setup-X.Y.Z.exe</code> na release — instalação por usuário, sem admin.</p></div>
+    <div class="step"><h3>Configure</h3><p>Escolha alvo, áudio e FPS. Do fonte: <code>pip install -r requirements.txt &amp;&amp; python app.py</code></p></div>
+    <div class="step"><h3>Grave</h3><p>Aperte <span class="kbd">F12</span> e pronto: o MP4 cai em <code>Documentos\GravaTrem</code>.</p></div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <div class="sec-head">
+    <h2><i class="fa-solid fa-circle-question"></i>Perguntas de mineiro</h2>
+  </div>
+  <details><summary><i class="fa-solid fa-volume-xmark"></i>Uai, cadê o áudio do sistema?</summary>
+    <p>Precisa de dispositivo WASAPI com loopback. Sem ele, o app esconde os modos com sistema sozinho — mic e vídeo seguem normais.</p></details>
+  <details><summary><i class="fa-solid fa-shield-halved"></i>O antivírus implicou com o instalador?</summary>
+    <p>O exe ainda não tem assinatura digital: libere a pasta ou o arquivo. Assinatura entra no roadmap.</p></details>
+  <details><summary><i class="fa-solid fa-handshake-angle"></i>Posso ajudar no projeto?</summary>
+    <p>Uai, claro! O repo tem guia de contribuição, pipeline de build de 1 comando e docs de arquitetura.</p></details>
+</div></section>
+
+<section id="download"><div class="wrap"><div class="dl">
+  <h2>Bora gravar uns trem?</h2>
+  <p>Baixe o instalador na página de releases do GitHub.</p>
+  <a class="btn" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem/releases"><i class="fa-solid fa-download"></i>GravaTrem-Setup</a>
+  <div class="req">
+    <span><i class="fa-solid fa-check"></i>Windows 10/11 64-bit</span>
+    <span><i class="fa-solid fa-check"></i>Sem cadastro, sem paywall</span>
+    <span><i class="fa-solid fa-check"></i>MP4 H.264 + AAC</span>
+  </div>
+</div></div></section>
+
+<footer>
+  <div class="social">
+    <a href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+    <a href="https://github.com/ryan-junio-oliveira" aria-label="Autor"><i class="fa-solid fa-user-astronaut"></i></a>
+  </div>
+  GravaTrem · Trem de Gravar os Trem · Licença MIT · Feito em Minas Gerais <i class="fa-solid fa-mountain"></i>
+</footer>
+
+</body>
+</html>

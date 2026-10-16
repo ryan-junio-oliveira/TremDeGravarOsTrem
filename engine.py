@@ -15,6 +15,8 @@ Responsabilidades:
 import configparser
 import os
 import queue
+import shutil
+import sys
 import threading
 import time
 from collections import deque
@@ -32,20 +34,105 @@ except ImportError:  # sem loopback: so microfone / so video
     pyaudio = None
     HAS_LOOPBACK = False
 
+
+def _is_frozen():
+    return bool(getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"))
+
+
 BASE_DIR = Path(__file__).resolve().parent
-APP_INI = BASE_DIR / "app.ini"
-LANG_DIR = BASE_DIR / "lang"
+# No bundle congelado (PyInstaller onedir) os dados ficam em sys._MEIPASS
+# (= dist/GravaTrem/_internal); em dev continuam ao lado do fonte.
+BUNDLE_DIR = Path(getattr(sys, "_MEIPASS", str(BASE_DIR)))
+LANG_DIR = BUNDLE_DIR / "lang"
+BUNDLED_INI = BUNDLE_DIR / "app.ini"
+
+
+def user_config_path():
+    base = Path(os.environ.get("APPDATA", str(Path.home())))
+    return base / "GravaTrem" / "app.ini"
+
+
+def _resolve_app_ini():
+    """Em dev: app.ini ao lado do fonte. Congelado: %APPDATA%/GravaTrem/app.ini
+    (Program Files nao e gravavel com PrivilegesRequired=lowest). Semeia o
+    arquivo do usuario a partir do default embutido no bundle, se houver."""
+    if not _is_frozen():
+        return BASE_DIR / "app.ini"
+    target = user_config_path()
+    try:
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if BUNDLED_INI.exists():
+                shutil.copyfile(BUNDLED_INI, target)
+    except OSError:
+        pass
+    return target
+
+
+APP_INI = _resolve_app_ini()
+
+DEFAULTS = {
+    "soutputfolder": "",
+    "slangfile": "Portuguese(BR).ini",
+    "dwfps": "15",
+    "dwsamplerate": "44100",
+    "saudiomode": "both",
+    "spresetlabel": "Equilibrado",
+    "scapmode": "full",
+    "dwmonitor": "1",
+    "sregion": "",
+    "sshowcursor": "1",
+}
+
+
+def resource_path(name):
+    """Caminho de um recurso embutido (icon.ico, lang/...) funcionando em
+    dev e no bundle congelado."""
+    return BUNDLE_DIR / name
+
+
+def ensure_defaults(cfg):
+    """Garante secao OPTION + defaults mesmo com app.ini ausente/incompleto.
+    Sem isso, cfg.set('OPTION', ...) levanta NoSectionError no instalado."""
+    if not cfg.has_section("OPTION"):
+        cfg.add_section("OPTION")
+    for k, v in DEFAULTS.items():
+        if not cfg.has_option("OPTION", k):
+            cfg.set("OPTION", k, v)
+    return cfg
+
+
+def save_config(cfg):
+    """Persiste cfg no local gravavel (resolve APP_INI de novo por seguranca)."""
+    ensure_defaults(cfg)
+    target = _resolve_app_ini()
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with open(target, "w", encoding="utf-8-sig") as f:
+            cfg.write(f)
+    except OSError:
+        # ex.: perfil sem APPDATA gravavel — nao derruba a gravacao por causa disso
+        pass
+    return target
 
 __all__ = [
-    "APP_INI", "BASE_DIR", "HAS_LOOPBACK", "LANG_DIR",
-    "LiveMonitor", "default_output_folder", "draw_cursor", "get_cursor_pos",
-    "load_lang", "new_meter", "record_screen",
+    "APP_INI", "BASE_DIR", "BUNDLE_DIR", "BUNDLED_INI", "HAS_LOOPBACK", "LANG_DIR",
+    "LiveMonitor", "default_output_folder", "draw_cursor", "ensure_defaults",
+    "get_cursor_pos", "load_lang", "new_meter", "record_screen", "resource_path",
+    "save_config", "user_config_path",
 ]
 
 
 def load_lang():
     cfg = configparser.ConfigParser()
-    cfg.read(APP_INI, encoding="utf-8-sig")
+    try:
+        if APP_INI.exists():
+            cfg.read(APP_INI, encoding="utf-8-sig")
+        elif BUNDLED_INI.exists() and BUNDLED_INI != APP_INI:
+            cfg.read(BUNDLED_INI, encoding="utf-8-sig")
+    except OSError:
+        pass
+    ensure_defaults(cfg)
     lang = configparser.ConfigParser()
     lang.read(LANG_DIR / cfg.get("OPTION", "sLangFile", fallback="Portuguese(BR).ini"),
               encoding="utf-8-sig")

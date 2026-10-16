@@ -27,13 +27,20 @@ if exist dist rmdir /s /q dist
 if exist installer\Output rmdir /s /q installer\Output
 python -m PyInstaller --noconfirm --clean --onedir --windowed ^
   --name %APPNAME% --icon icon.ico ^
-  --add-data "lang;lang" --add-data "icon.ico;." ^
-  --hidden-import win32gui ^
+  --add-data "lang;lang" --add-data "icon.ico;." --add-data "app.ini;." ^
+  --hidden-import win32gui --hidden-import win32api ^
+  --hidden-import mss --hidden-import mss.windows ^
+  --hidden-import sounddevice --hidden-import pyaudiowpatch ^
+  --hidden-import av --hidden-import PIL.Image ^
+  --collect-data mss --collect-data sounddevice --collect-data av --collect-data PIL ^
+  --collect-binaries av --collect-binaries sounddevice --collect-binaries pyaudiowpatch --collect-binaries numpy ^
+  --copy-metadata mss --copy-metadata sounddevice --copy-metadata av --copy-metadata pyaudiowpatch ^
   app.py || exit /b 1
 
 echo [4/5] Validando bundle...
 if not exist "%DISTDIR%\%APPNAME%.exe" (echo ERRO: exe nao gerado. & exit /b 1)
 if not exist "%DISTDIR%\_internal\icon.ico" if not exist "%DISTDIR%\icon.ico" (echo ERRO: icon.ico nao embutido. & exit /b 1)
+if not exist "%DISTDIR%\_internal\app.ini" if not exist "%DISTDIR%\app.ini" (echo ERRO: app.ini nao embutido. & exit /b 1)
 if not exist "%DISTDIR%\_internal\lang\Portuguese(BR).ini" (echo ERRO: lang nao embutido. & exit /b 1)
 echo OK: %DISTDIR%\%APPNAME%.exe
 

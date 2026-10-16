@@ -27,8 +27,8 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QCheckBox, QComboBox,
                                QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from engine import (APP_INI, HAS_LOOPBACK, LiveMonitor, default_output_folder, load_lang, new_meter,
-                    record_screen)
+from engine import (HAS_LOOPBACK, LiveMonitor, default_output_folder, load_lang, new_meter,
+                    record_screen, resource_path, save_config)
 
 APP_VERSION = "0.0.1"
 
@@ -75,8 +75,8 @@ QLabel#big {{ font-size: 12pt; font-weight: bold; }}
 QPushButton#tool {{ background: transparent; border: none; border-radius: 8px; color: {TXT}; padding: 6px 2px; }}
 QPushButton#tool:hover {{ background: {CARD}; }}
 QPushButton#tool:checked {{ background: {BLUE}; }}
-QPushButton#tab {{ background: transparent; border: none; color: {MUTED}; padding: 6px 12px; font-weight: bold; }}
-QPushButton#tab:hover {{ color: {TXT}; }}
+QPushButton#tab {{ background: transparent; border: none; color: {TXT}; padding: 6px 12px; font-weight: bold; }}
+QPushButton#tab:hover {{ color: {BLUE}; }}
 QPushButton#tab:checked {{ color: {BLUE}; }}
 QPushButton#tab:disabled {{ color: {DIM}; }}
 QPushButton#mode {{ background: {CARD}; border: none; border-radius: 8px; padding: 12px 8px; color: {TXT}; }}
@@ -102,6 +102,7 @@ QPushButton#recbig:hover {{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
 QPushButton#recbig:checked {{ background: {CARD}; border: 3px solid {BLUE}; }}
 QLabel#timer {{ font-family: "Consolas"; font-size: 20pt; }}
 QScrollBar:vertical {{ background: {INPUT}; width: 10px; border-radius: 5px; }}
+QToolTip {{ background: #0e0e10; color: {TXT}; border: 1px solid {CARD}; padding: 4px; }}
 QScrollBar::handle:vertical {{ background: {CARD}; border-radius: 5px; min-height: 30px; }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 """
@@ -254,9 +255,9 @@ def draw_icon(name, color_txt, size=26):
 
 
 def dual_icon(name):
-    """QIcon com estado normal (muted) e checked (branco)."""
+    """QIcon com estado normal (claro) e checked (branco)."""
     ic = QIcon()
-    ic.addPixmap(draw_icon(name, MUTED).pixmap(26, 26), QIcon.Normal, QIcon.Off)
+    ic.addPixmap(draw_icon(name, TXT).pixmap(26, 26), QIcon.Normal, QIcon.Off)
     ic.addPixmap(draw_icon(name, "#ffffff").pixmap(26, 26), QIcon.Normal, QIcon.On)
     return ic
 
@@ -376,7 +377,7 @@ class FloatBar(QWidget):
         super().__init__(None, Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.main = main
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setStyleSheet(f"background: {PANEL}; border-radius: 10px;")
+        self.setStyleSheet(f"background: {PANEL}; border-radius: 10px; color: {TXT};")
         lay = QHBoxLayout(self)
         lay.setContentsMargins(10, 6, 10, 6)
         lay.setSpacing(8)
@@ -392,10 +393,10 @@ class FloatBar(QWidget):
         self.lbl_time.setObjectName("mono")
         lay.addWidget(self.lbl_time)
         self.btn_rec = QPushButton()
-        self.btn_rec.setIcon(dual_icon("rec"))
+        self.btn_rec.setIcon(draw_icon("rec", "#ffffff"))
         self.btn_rec.setIconSize(QSize(20, 20))
         self.btn_rec.setFixedSize(40, 32)
-        self.btn_rec.setStyleSheet(f"background: {RED}; border-radius: 8px;")
+        self.btn_rec.setStyleSheet(f"background: {RED}; border-radius: 8px; color: white;")
         self.btn_rec.setToolTip("Gravar/Parar (F12)")
         self.btn_rec.clicked.connect(self.main.on_toggle)
         lay.addWidget(self.btn_rec)
@@ -412,7 +413,8 @@ class FloatBar(QWidget):
         b.setIcon(dual_icon(name))
         b.setIconSize(QSize(20, 20))
         b.setFixedSize(36, 32)
-        b.setStyleSheet(f"background: transparent; border-radius: 6px;")
+        b.setStyleSheet(f"background: transparent; border-radius: 6px;"
+                        f"QPushButton:hover {{ background: {CARD}; }}")
         b.setToolTip(tip)
         b.setCursor(Qt.PointingHandCursor)
         return b
@@ -532,7 +534,7 @@ class MainWindow(QMainWindow):
         lay = QHBoxLayout(bar)
         lay.setContentsMargins(14, 6, 14, 4)
         lay.setSpacing(8)
-        ico = Path(__file__).resolve().parent / "icon.ico"
+        ico = resource_path("icon.ico")
         if ico.exists():
             logo = QLabel()
             logo.setPixmap(QPixmap(str(ico)).scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation))
@@ -600,7 +602,7 @@ class MainWindow(QMainWindow):
         for i, (m, b) in enumerate(items):
             act = (m == self.capmode)
             bg = BLUE if act else CARD
-            fg = "#06301f" if act else MUTED
+            fg = "#06301f" if act else TXT
             r_left = 10 if i == 0 else 0
             r_right = 10 if i == len(items) - 1 else 0
             b.setStyleSheet(
@@ -1110,8 +1112,7 @@ class MainWindow(QMainWindow):
             self.region = dlg.rect
             r = self.region
             self.cfg.set("OPTION", "sRegion", f"{r['left']},{r['top']},{r['width']},{r['height']}")
-            with open(APP_INI, "w", encoding="utf-8-sig") as f:
-                self.cfg.write(f)
+            save_config(self.cfg)
 
     def _current_region(self):
         if self.capmode == "full":
@@ -1216,8 +1217,7 @@ class MainWindow(QMainWindow):
         self.cfg.set("OPTION", "sCapMode", self.capmode)
         if self.capmode == "full":
             self.cfg.set("OPTION", "dwMonitor", str(self.mon_idx[self.tgt_box.currentIndex()]))
-        with open(APP_INI, "w", encoding="utf-8-sig") as f:
-            self.cfg.write(f)
+        save_config(self.cfg)
         self.monitor.stop()
         self.stop_event = threading.Event()
         self.out_path = out
@@ -1398,7 +1398,7 @@ class MainWindow(QMainWindow):
 def main():
     log.info("=== GravaTrem v%s iniciando ===", APP_VERSION)
     app = QApplication(sys.argv)
-    ico = Path(__file__).resolve().parent / "icon.ico"
+    ico = resource_path("icon.ico")
     if ico.exists():
         app.setWindowIcon(QIcon(str(ico)))
     w = MainWindow()

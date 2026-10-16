@@ -34,19 +34,27 @@ Qt + FFmpeg + PortAudio embutidos — normal).
 --onedir      abre mais rápido e o antivirus reclama menos que --onefile
 --windowed    sem janela de console (o app já loga em arquivo)
 --icon        icon.ico no exe
---add-data "lang;lang"   i18n lida em runtime via BASE_DIR (engine.load_lang);
+--add-data "lang;lang"   i18n lida em runtime via BUNDLE_DIR (engine.load_lang);
                          sem isso o app cai para English e o prefixo vira "screen"
---hidden-import win32gui  importado dentro de função (get_cursor_pos,
-                         _list_windows); o PyInstaller não o detecta sozinho
---add-data "icon.ico;."   a titlebar e o ícone da janela carregam icon.ico em
-                         runtime; sem isso o bundle fica sem logo e a taskbar
-                         usa só o ícone embutido no exe
+--add-data "app.ini;."   defaults semeados no bundle; em instalado o motor copia
+                         para %APPDATA%\GravaTrem\app.ini (Program Files nao e
+                         gravavel) — sem isso, cfg.set quebrava com NoSectionError
+--hidden-import win32gui/win32api  importados dentro de função (get_cursor_pos,
+                         _list_windows); o PyInstaller não os detecta sozinho
+--hidden-import mss/sounddevice/pyaudiowpatch/av/PIL.Image  imports dinâmicos
+                         ou em função; sem isso o bundle pode nascer sem o modulo
+--collect-data mss/sounddevice/av/PIL  dados de runtime (ex.: PortAudio em
+                         _sounddevice_data); ausentes = audio quebra no instalado
+--collect-binaries av/sounddevice/pyaudiowpatch/numpy  FFmpeg (av.libs),
+                         PortAudio e OpenBLAS; ausentes = exe nao grava/reproduz
+--copy-metadata ...      dist-info p/ importlib.metadata nao falhar no congelado
 ```
 
-`sounddevice`, `av`, `numpy`, `PIL`, `pyaudiowpatch` são detectados
-automaticamente (hooks + imports de topo em `engine.py`). Se adicionar um
-import condicional novo, registre o `--hidden-import` correspondente no
-`build.bat` e teste o bundle.
+`sounddevice`, `av`, `numpy`, `PIL`, `pyaudiowpatch` têm imports de topo em
+`engine.py`, mas `av`/`PIL.Image` também são importados dentro de função em
+`app.py`, e os dados/binários (FFmpeg, PortAudio) não viajam sem
+`--collect-data/--collect-binaries`. Se adicionar um import condicional novo,
+registre o `--hidden-import` correspondente no `build.bat` e teste o bundle.
 
 ## 4. O script Inno (`installer/GravaTrem.iss`)
 
@@ -55,9 +63,10 @@ import condicional novo, registre o `--hidden-import` correspondente no
 - Empacota `dist\GravaTrem\*` recursivo (exe + `_internal` + `lang`).
 - Idiomas do assistente: PT-BR + EN. Atalhos: Menu Iniciar sempre,
   Desktop opcional. Opção de executar ao concluir.
-- **Não instala `app.ini` de propósito**: o motor tolera config ausente
-  (usa defaults e grava ao final da primeira gravação). Cada usuário gera
-  a sua — sem conflito de permissão nem config alheia vazando.
+- **Config por usuário**: o bundle leva `app.ini` só como seed de defaults.
+  Em instalado, o motor copia para `%APPDATA%\GravaTrem\app.ini` e só lê/grava
+  lá (Program Files não é gravável com `PrivilegesRequired=lowest`). Cada
+  usuário gera a sua — sem conflito de permissão nem config alheia vazando.
 - `AppId` é um GUID fixo: **não mude** (o Windows usa para upgrades e
   desinstalação limpa). Versão vem da linha de comando (`/DAppVersion=`).
 
@@ -80,7 +89,7 @@ REM desinstalacao silenciosa
 ```
 
 O que conferir: atalhos criados, primeira gravação de ~3 s gera MP4 válido,
-`%APPDATA%\GravaTrem\logs\trem.log` sem traceback, desinstalação não deixa
+`%APPDATA%\GravaTrem\logs\gravatrem.log` sem traceback, desinstalação não deixa
 a pasta nem a entrada em "Aplicativos instalados".
 
 ## 7. Problemas comuns

@@ -3,7 +3,7 @@ version = 0.0.1
 beta = 0
 
 [OPTION]
-; Pasta vazia = %USERPROFILE%\Documents\GravaTrem
+; Pasta vazia = %USERPROFILE%\Documents\TremDeGravarOsTrem
 soutputfolder =
 slangfile = Portuguese(BR).ini
 dwfps = 15
@@ -14,3 +14,5 @@ scapmode = full
 dwmonitor = 1
 sregion =
 sshowcursor = 1
+; 1 = multitrilha (mix + mic + sistema isolados, estilo OBS); só vale com saudiomode=both
+ssplittracks = 0

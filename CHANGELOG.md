@@ -1,6 +1,44 @@
 # Changelog
 
-## [Unreleased]
+## [0.0.1] — 2026-10-20
+
+### Alterado
+- Pasta padrão de saída agora é `Documents\TremDeGravarOsTrem`
+  (antes `Documents\GravaTrem`).
+- Card **Pasta de saída** na tela inicial: mostra a pasta atual e permite
+  **Escolher…** outro diretório ou voltar ao **Padrão**. Na primeira execução
+  (sem `sOutputFolder` configurado) o app pergunta se você quer escolher
+  a pasta na hora.
+- Design system próprio: `theme.py` (tokens + QSS como fonte única) e
+  `docs/DESIGN_SYSTEM.md` (cores, tipo, componentes, regras, checklist de PR).
+- Ícones FontAwesome via `qtawesome` (zero emoji na UI): fonte de
+  áudio, ações (iniciar/parar/reproduzir/atualizar), pastas, stats e dicas.
+- Alvo com fonte única: só o segmento da topbar escolhe Tela/Janela/Região
+  (srccards redundantes removidos); rail direito sem corte (combos com
+  `MinimumContentsLength`, labels wordwrap com policy `Ignored`, alvo e
+  ações finais empilhados em largura total).
+- Tema claro moderno com Poppins empacotada (`assets/fonts/`, OFL):
+  superfícies brancas, texto tinta, acentos escurecidos para contraste;
+  100% ícones FontAwesome (`draw_icon`/`dual_icon` removidos); preview,
+  tooltip e overlay seguem escuros. Também corrige o rótulo do monitor
+  ("Tela 0" → "Tela 1").
+- Selects redesenhados (seta custom `assets/chevron-down.png`, popup com
+  itens de 30px e hover), tabela de gravações moderna (sem grade, zebra,
+  hover, colunas inteligentes, empty state) e página de Logs (filtro por
+  nível, auto-refresh, viewer mono, path + tamanho).
+- Topbar contextual: seletor Tela/Janela/Região slim (agora com ícones) só na
+  aba Gravar, divisor `vdiv` + ações globais (mic/foto/REC) sempre
+  visíveis; seletor trava durante a gravação.
+- REC sem vermelhão: `#recbtn`/`#start`/FloatBar em tinta escura com dot
+  vermelho; marca da sidebar em `TremDeGravarOsTrem`.
+- Multitrilha de áudio estilo OBS: toggle no card de áudio grava 3 faixas
+  AAC (mix + mic + sistema isolados, nomeadas); última gravação mostra
+  "N faixas"; com uma fonte só, faixa única automática.
+- Feedback em tempo real gravando: preview ao vivo sai do worker
+  (throttled, com cursor), timer/título/MB ao vivo, borda do preview
+  em vermelho; pausar/retomar (pausa cortada do MP4) com trio
+  REC/Pausar/Parar na topbar + FloatBar; pill SALVO; confirmação ao
+  fechar gravando; aviso de disco < 500 MB e de mic ausente.
 
 ### Renomeado
 - Projeto agora se chama **Trem de Gravar os Trem** (curto: **GravaTrem**,
@@ -45,27 +83,27 @@
 - `app.ini.example`, `.gitignore`, `LICENSE` (MIT), `docs/ARQUITETURA.md`,
   `README.md` reescrito, `Abrir-GravaTrem.bat` atualizado.
 
-## [0.0.1] — primeira versão empacotada
+### Base anterior (primeiro empacotamento)
 
-### Executar (sem instalar Python)
+#### Executar (sem instalar Python)
 - Build standalone em `dist/` (não versionado): Qt + FFmpeg + PortAudio
   embutidos (~244 MB).
 
-### Executar do código-fonte
+#### Executar do código-fonte
 ```bat
 python -m pip install -r requirements.txt
 python app.py
 ```
 ou dois cliques em `Abrir-GravaTrem.bat`.
 
-### Diagnóstico
+#### Diagnóstico
 - Log: `%APPDATA%\GravaTrem\logs\gravatrem.log` (gira a cada 1 MB, 3 cópias).
 - Erros de gravação/foto abrem diálogo e registram traceback no log.
 - Config: `app.ini` (`sAudioMode`, `sCapMode`, `dwMonitor`, `sRegion`,
   `sShowCursor`, `dwFps`, `sPresetLabel`).
 - Saída padrão: `%USERPROFILE%\Documents\GravaTrem\`.
 
-### Verificado nesta versão
+#### Verificado nesta versão
 - Gravação MP4 `h264+aac` de ponta a ponta (744 frames decodificados).
 - Correção: cursor na borda da tela não quebra mais a gravação.
 - Fluidez medida: 15.0 fps reais a 15 configurados; ~23 a 30 (teto do GDI).

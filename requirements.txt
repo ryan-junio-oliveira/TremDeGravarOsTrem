@@ -6,3 +6,4 @@ numpy>=1.24
 pillow>=10
 PySide6>=6.7
 pywin32>=300
+qtawesome>=1.3

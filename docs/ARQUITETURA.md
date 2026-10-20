@@ -7,7 +7,8 @@ Documento técnico de como o sistema funciona. Visão de usuário está no
 
 ```
 app.py        UI Qt (PySide6): MainWindow, FloatBar, RegionPicker,
-              VUMeter, WaveScope, Toggle, draw_icon/dual_icon
+              VUMeter, WaveScope, Toggle, fa_icon/fa_label (FontAwesome)
+theme.py      Design system claro: tokens + QSS (fonte única, ver DESIGN_SYSTEM.md)
 engine.py     Motor sem UI: captura (mss), áudio (sounddevice +
               pyaudiowpatch), mux (PyAV), cursor, i18n, config
 app.ini       Config persistida ([GENERAL] + [OPTION])
@@ -89,13 +90,20 @@ com seu par `isLoopbackDevice` pelo nome; sem `pyaudiowpatch` ou sem par,
 
 ## 4. UI Qt (`app.py`)
 
-- `MainWindow`: titlebar (logo + `v0.0.1` + pill de status) → toolbar
-  (segmento Tela/Janela/Região, toggle mic, REC redondo, foto) → abas
-  (Começar/Sobre via `QStackedWidget`) → banner de dica.
+- `MainWindow`: sidebar (logo + `v0.0.1`, nav Gravar/Gravações/Logs/Sobre,
+  card de status com timer + FPS, dica, abrir pasta) + topbar (segmento
+  Tela/Janela/Região, toggle mic, foto, REC/Pausar/Parar) + `QStackedWidget`
+  de 4 páginas. Estados via `_sync_rec_ui` (idle/rec/paused); F12 =
+  gravar/parar/retomar; fechar durante gravação pede confirmação.
 - Tela inicial (`_page_home`): preview (`QLabel` + badge de resolução),
   hotkeys fixas (F12 REC, F11 foto — `QShortcut`), alvo, `always-on-top`,
   cursor, fonte de áudio, VU mix + VU mic/sys + scope, FPS/preset,
-  duração + FPS real + disco livre, última gravação (reproduzir/pasta).
+  disco livre, pasta de saída, última gravação (reproduzir/pasta).
+- Gravações (`_page_dashboard`): stat cards + tabela sem grade com zebra,
+  hover, colunas inteligentes, empty state e duplo-clique que reproduz.
+- Logs (`_page_logs`): filtro por nível, auto-refresh 2 s (`log_timer`,
+  só com a aba aberta), viewer mono só-leitura com tail de 400 linhas,
+  path + tamanho no rodapé.
 - Preview: `_preview_tick` (50 ms) dispara thread que faz `grab` +
   `QImage` e emite `preview_ready(QImage, vw, vh)`; guardas `_pv_busy`
   + `_pv_last_emit` (1.5 s) evitam acúmulo se o DWM engasgar. Durante a
@@ -110,6 +118,16 @@ com seu par `isLoopbackDevice` pelo nome; sem `pyaudiowpatch` ou sem par,
 - Estado: `self.amode` (`both|mic|sys|none`), `self.capmode`
   (`full|win|reg`), combos únicos (`amode_box`, `dev_box`, `fps_box`,
   `preset_box`) — sem espelhos. `on_record` persiste tudo no `app.ini`.
+- Multitrilha estilo OBS (`sSplitTracks`, toggle no card de áudio, só com
+  `both`): `record_screen(..., split_tracks=True)` grava 3 faixas AAC
+  (mix + mic + sistema isolados, com `title` Mix/Microfone/Sistema).
+  Faixas isoladas consomem só as amostras novas da iteração (sobras do
+  mix não duplicam); cada faixa tem `pend` + âncora de PTS próprios.
+  Com uma fonte só, cai para faixa única sozinho.
+- Pausa (`pause_event`): worker congela relógio/preview e descarta áudio
+  acumulado; ao retomar, `t_start` desloca (pausa cortada, sem buraco)
+  e `nxt` reinicia (sem rajada). Preview ao vivo sai do worker via
+  `preview_cb(rgb, w, h)` throttled (`preview_interval`, padrão 0.2 s).
 - Erros de gravação/foto: `error_sig` (thread-safe) → `QMessageBox` +
   traceback no log rotativo (`%APPDATA%\GravaTrem\logs\gravatrem.log`,
   1 MB x 3).
@@ -119,7 +137,7 @@ com seu par `isLoopbackDevice` pelo nome; sem `pyaudiowpatch` ou sem par,
 | Chave | Seção | Valores | Efeito |
 |---|---|---|---|
 | `version`, `beta` | GENERAL | — | exibição |
-| `sOutputFolder` | OPTION | caminho ou vazio | vazio = `Documents\GravaTrem` |
+| `sOutputFolder` | OPTION | caminho ou vazio | vazio = `Documents\TremDeGravarOsTrem` |
 | `sLangFile` | OPTION | `Portuguese(BR).ini` / `English.ini` | prefixo do MP4 (`tela`/`screen`), rótulos |
 | `dwFps` | OPTION | `10`/`15`/`30` | taxa alvo (real limitada pelo GDI, ~23) |
 | `dwSampleRate` | OPTION | `44100` | taxa do AAC/monitor |
@@ -129,6 +147,7 @@ com seu par `isLoopbackDevice` pelo nome; sem `pyaudiowpatch` ou sem par,
 | `dwMonitor` | OPTION | índice mss (1-based) | monitor em `full` |
 | `sRegion` | OPTION | `l,t,w,h` | região em `reg` |
 | `sShowCursor` | OPTION | `1`/`0` | desenhar cursor |
+| `sSplitTracks` | OPTION | `1`/`0` | multitrilha (mix+mic+sys); só com `both` |
 
 ## 6. Limites conhecidos e próximos passos
 

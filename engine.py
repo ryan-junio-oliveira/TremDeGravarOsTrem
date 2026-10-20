@@ -8,7 +8,8 @@ Responsabilidades:
     - config/i18n: ``load_lang``, ``default_output_folder``
     - audio: ``_find_loopback``, ``_resample_mono``, ``LiveMonitor``
     - video: ``get_cursor_pos``, ``draw_cursor``
-    - gravacao: ``record_screen`` (tela + mic e/ou sistema -> MP4 H.264 + AAC)
+    - gravacao: ``record_screen`` (tela + mic e/ou sistema -> MP4 H.264 + AAC,
+      com multitrilha opcional estilo OBS: mix + mic + sistema isolados)
     - medicao: ``new_meter``, ``_feed_meter``, ``_db``
 """
 
@@ -82,6 +83,7 @@ DEFAULTS = {
     "dwmonitor": "1",
     "sregion": "",
     "sshowcursor": "1",
+    "ssplittracks": "0",
 }
 
 
@@ -118,7 +120,7 @@ def save_config(cfg):
 __all__ = [
     "APP_INI", "BASE_DIR", "BUNDLE_DIR", "BUNDLED_INI", "HAS_LOOPBACK", "LANG_DIR",
     "LiveMonitor", "default_output_folder", "draw_cursor", "ensure_defaults",
-    "get_cursor_pos", "load_lang", "new_meter", "record_screen", "resource_path",
+    "get_cursor_pos", "load_lang", "new_meter", "output_folder_configured", "record_screen", "resource_path",
     "save_config", "user_config_path",
 ]
 
@@ -142,10 +144,15 @@ def load_lang():
 
 
 def default_output_folder(cfg):
-    folder = cfg.get("OPTION", "sOutputFolder", fallback="").strip()
+    folder = cfg.get("OPTION", "sOutputFolder", fallback="").strip().strip('"')
     if folder:
         return Path(folder)
-    return Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Documents" / "GravaTrem"
+    return Path(os.environ.get("USERPROFILE", str(Path.home()))) / "Documents" / "TremDeGravarOsTrem"
+
+
+def output_folder_configured(cfg):
+    """True se o usuário já escolheu uma pasta de saída (sOutputFolder não vazio)."""
+    return bool(cfg.get("OPTION", "sOutputFolder", fallback="").strip().strip('"'))
 
 
 def _find_loopback():
@@ -304,8 +311,22 @@ class LiveMonitor:
 
 
 def record_screen(path, fps, samplerate, mic_device_or_none, sys_on, stop_event,
-                  meter=None, status_cb=None, region=None, show_cursor=True, preset="veryfast"):
-    """Grava tela (regiao ou monitor primario) + microfone e/ou audio do sistema."""
+                  meter=None, status_cb=None, region=None, show_cursor=True, preset="veryfast",
+                  split_tracks=False, pause_event=None, preview_cb=None,
+                  preview_interval=0.2):
+    """Grava tela (regiao ou monitor primario) + microfone e/ou audio do sistema.
+
+    split_tracks=True (estilo OBS) grava 3 faixas AAC quando mic E sistema
+    estao ativos: mix + mic isolado + sistema isolado. Com uma fonte só,
+    cai para faixa única automaticamente.
+
+    pause_event (threading.Event, opcional): enquanto setado, o worker não
+    grava nada (áudio descartado, relógio congelado); ao limpar, a pausa é
+    cortada da linha do tempo (t_start deslocado, sem buraco no MP4).
+
+    preview_cb(rgb, w, h) (opcional): recebe cópia do frame no máximo a
+    cada preview_interval segundos, para monitor ao vivo na UI.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     mic_q = queue.Queue()
@@ -375,17 +396,77 @@ def record_screen(path, fps, samplerate, mic_device_or_none, sys_on, stop_event,
             vstream.time_base = Fraction(1, fps)
             vstream.options = {"preset": preset, "tune": "zerolatency"}
             astream = None
+            astreams_iso = {}
             if mic_stream is not None or sys_stream is not None:
                 astream = container.add_stream("aac", rate=samplerate, layout="mono")
                 astream.time_base = Fraction(1, samplerate)
+                try:
+                    astream.metadata["title"] = "Mix"
+                except (TypeError, ValueError):
+                    pass
+            split = split_tracks and mic_stream is not None and sys_stream is not None
+            if split:
+                for key, title in (("mic", "Microfone"), ("sys", "Sistema")):
+                    st = container.add_stream("aac", rate=samplerate, layout="mono")
+                    st.time_base = Fraction(1, samplerate)
+                    try:
+                        st.metadata["title"] = title
+                    except (TypeError, ValueError):
+                        pass
+                    astreams_iso[key] = st
             t_start = time.time()
             vpts = 0
-            apts = None  # ancora no relogio na primeira janela de audio
+            apts = [None]  # ancora no relogio na primeira janela de audio
+            apts_iso = {"mic": [None], "sys": [None]}
             mic_buf = np.zeros(0, dtype=np.float32)
             sys_buf = np.zeros(0, dtype=np.float32)
             pend = np.zeros(0, dtype=np.float32)  # resto <1024 entre iteracoes
+            pend_iso = {"mic": np.zeros(0, dtype=np.float32),
+                        "sys": np.zeros(0, dtype=np.float32)}
             nxt = time.time()
+            pausing = False
+            ps = 0.0
+            last_pv = 0.0
+
+            def _push(stream, data, anchor):
+                """Muxa data em blocos de 1024; devolve o resto <1024."""
+                while data.size >= 1024:
+                    chunk, data = data[:1024], data[1024:]
+                    if anchor[0] is None:  # ancora o inicio no relogio de parede
+                        anchor[0] = max(0, int((time.time() - t_start) * samplerate) - 1024)
+                    af = av.AudioFrame.from_ndarray(np.clip(chunk, -1.0, 1.0).reshape(1, -1),
+                                                    format="fltp", layout="mono")
+                    af.sample_rate = samplerate
+                    af.pts = anchor[0]
+                    anchor[0] += 1024
+                    for pkt in stream.encode(af):
+                        container.mux(pkt)
+                return data
             while not stop_event.is_set():
+                if pause_event is not None and pause_event.is_set():
+                    if not pausing:
+                        pausing = True
+                        ps = time.time()
+                    # pausa: descarta áudio acumulado (callbacks seguem p/ o VU),
+                    # congela relógio e preview — retoma sem buraco
+                    try:
+                        while True:
+                            mic_q.get_nowait()
+                    except queue.Empty:
+                        pass
+                    try:
+                        while True:
+                            sys_q.get_nowait()
+                    except queue.Empty:
+                        pass
+                    mic_buf = np.zeros(0, dtype=np.float32)
+                    sys_buf = np.zeros(0, dtype=np.float32)
+                    time.sleep(0.05)
+                    continue
+                if pausing:
+                    t_start += time.time() - ps  # corta a pausa da timeline
+                    nxt = time.time()  # evita rajada de catch-up
+                    pausing = False
                 img = safe_grab(mon)
                 if img is None:
                     time.sleep(0.02)
@@ -402,19 +483,32 @@ def record_screen(path, fps, samplerate, mic_device_or_none, sys_on, stop_event,
                 vpts = frame.pts + 1
                 for pkt in vstream.encode(frame):
                     container.mux(pkt)
+                now = time.time()
+                if preview_cb is not None and now - last_pv >= preview_interval:
+                    try:
+                        preview_cb(rgb.copy(), w, h)
+                    except Exception:
+                        pass
+                    last_pv = now
                 if astream is not None:
+                    got_mic = np.zeros(0, dtype=np.float32)
                     while True:
                         try:
                             _, c = mic_q.get_nowait()
-                            mic_buf = np.concatenate([mic_buf, c])
+                            got_mic = np.concatenate([got_mic, c])
                         except queue.Empty:
                             break
+                    got_sys = np.zeros(0, dtype=np.float32)
                     while True:
                         try:
                             _, c = sys_q.get_nowait()
-                            sys_buf = np.concatenate([sys_buf, c])
+                            got_sys = np.concatenate([got_sys, c])
                         except queue.Empty:
                             break
+                    if got_mic.size:
+                        mic_buf = np.concatenate([mic_buf, got_mic])
+                    if got_sys.size:
+                        sys_buf = np.concatenate([sys_buf, got_sys])
                     now = time.time()
                     # tolera lado travado: apos 0.5s sem dados, segue com o outro lado
                     mic_live = mic_stream is not None and (now - last["mic"] < 0.5 or mic_buf.size > 0)
@@ -428,18 +522,16 @@ def record_screen(path, fps, samplerate, mic_device_or_none, sys_on, stop_event,
                         new, sys_buf = sys_buf, np.zeros(0, dtype=np.float32)
                     else:
                         new = np.zeros(0, dtype=np.float32)
-                    pend = np.concatenate([pend, new]) if new.size else pend
-                    while pend.size >= 1024:
-                        chunk, pend = pend[:1024], pend[1024:]
-                        if apts is None:  # ancora o inicio do audio no relogio de parede
-                            apts = max(0, int((time.time() - t_start) * samplerate) - 1024)
-                        af = av.AudioFrame.from_ndarray(np.clip(chunk, -1.0, 1.0).reshape(1, -1),
-                                                        format="fltp", layout="mono")
-                        af.sample_rate = samplerate
-                        af.pts = apts
-                        apts += 1024
-                        for pkt in astream.encode(af):
-                            container.mux(pkt)
+                    pend = _push(astream, np.concatenate([pend, new]) if new.size else pend, apts)
+                    if split:
+                        # faixas isoladas consomem só o que CHEGOU nesta iteração
+                        # (sobras do mix ficam no pool e não duplicam)
+                        pend_iso["mic"] = _push(astreams_iso["mic"],
+                                                np.concatenate([pend_iso["mic"], got_mic]) if got_mic.size
+                                                else pend_iso["mic"], apts_iso["mic"])
+                        pend_iso["sys"] = _push(astreams_iso["sys"],
+                                                np.concatenate([pend_iso["sys"], got_sys]) if got_sys.size
+                                                else pend_iso["sys"], apts_iso["sys"])
                 if status_cb:
                     status_cb()
                 nxt += period
@@ -448,6 +540,9 @@ def record_screen(path, fps, samplerate, mic_device_or_none, sys_on, stop_event,
                 container.mux(pkt)
             if astream is not None:
                 for pkt in astream.encode(None):
+                    container.mux(pkt)
+            for st in astreams_iso.values():
+                for pkt in st.encode(None):
                     container.mux(pkt)
             container.close()
     finally:

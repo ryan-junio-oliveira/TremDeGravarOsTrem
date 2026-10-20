@@ -27,12 +27,12 @@ if exist dist rmdir /s /q dist
 if exist installer\Output rmdir /s /q installer\Output
 python -m PyInstaller --noconfirm --clean --onedir --windowed ^
   --name %APPNAME% --icon icon.ico ^
-  --add-data "lang;lang" --add-data "icon.ico;." --add-data "app.ini;." ^
+  --add-data "lang;lang" --add-data "icon.ico;." --add-data "app.ini;." --add-data "assets\fonts;assets\fonts" --add-data "assets\chevron-down.png;assets" ^
   --hidden-import win32gui --hidden-import win32api ^
   --hidden-import mss --hidden-import mss.windows ^
   --hidden-import sounddevice --hidden-import pyaudiowpatch ^
   --hidden-import av --hidden-import PIL.Image ^
-  --collect-data mss --collect-data sounddevice --collect-data av --collect-data PIL ^
+  --collect-data mss --collect-data sounddevice --collect-data av --collect-data PIL --collect-data qtawesome ^
   --collect-binaries av --collect-binaries sounddevice --collect-binaries pyaudiowpatch --collect-binaries numpy ^
   --copy-metadata mss --copy-metadata sounddevice --copy-metadata av --copy-metadata pyaudiowpatch ^
   app.py || exit /b 1

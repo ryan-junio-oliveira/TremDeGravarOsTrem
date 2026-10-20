@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TremDeGravarOsTrem — o trem que grava os trem da sua tela</title>
-<meta name="description" content="Gravador de tela open-source para Windows: tela, janela ou região + microfone e/ou áudio do sistema, multitrilha, pausa e preview ao vivo → MP4.">
+<title>TremDeGravarOsTrem — grave sua tela apertando um botão</title>
+<meta name="description" content="Gravador de tela grátis para Windows: grave sua tela, narre com o microfone, pause quando quiser e receba o vídeo pronto em MP4.">
 <link rel="icon" type="image/png" href="docs/assets/logo-256.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,34 +23,56 @@ body{background:var(--bg);color:var(--txt);font-family:"Poppins","Segoe UI",Aria
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 /* ---------- nav ---------- */
 nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
-  background:rgba(255,255,255,.85);border-bottom:1px solid var(--border)}
+  background:rgba(255,255,255,.88);border-bottom:1px solid var(--border)}
 nav .wrap{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
 nav img{width:34px;height:34px}
-nav .brand{font-weight:700;font-size:1.02rem;letter-spacing:-.3px}
-nav .links{margin-left:auto;display:flex;gap:20px}
+nav .brand{font-weight:700;font-size:1rem;letter-spacing:-.3px}
+nav .links{margin-left:auto;display:flex;gap:20px;align-items:center}
 nav .links a{color:var(--muted);text-decoration:none;font-weight:500;font-size:.92rem}
 nav .links a:hover{color:var(--txt)}
+nav .links a.mini{background:var(--ink);color:#fff;font-weight:600;padding:8px 18px;border-radius:10px}
+nav .links a.mini:hover{background:#232f45}
 /* ---------- hero ---------- */
-.hero{position:relative;text-align:center;padding:88px 24px 64px;overflow:hidden}
+.hero{position:relative;text-align:center;padding:72px 24px 0;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-40% -20% auto;height:560px;
   background:radial-gradient(ellipse at 50% 0%,rgba(240,68,82,.12),transparent 60%);pointer-events:none}
-.hero img.logo{width:120px;height:120px;filter:drop-shadow(0 18px 40px rgba(16,24,40,.18))}
-.hero h1{font-size:clamp(2rem,5.4vw,3.2rem);font-weight:700;margin:20px 0 6px;letter-spacing:-.5px}
-.hero .tag{color:var(--muted);font-size:1.15rem;margin-bottom:8px}
-.hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0 30px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);
+  border-radius:999px;padding:6px 16px;font-size:.85rem;font-weight:600;color:var(--muted)}
+.eyebrow .dot{color:var(--red)}
+.hero h1{font-size:clamp(2rem,5.4vw,3.2rem);font-weight:700;margin:20px 0 8px;letter-spacing:-.5px}
+.hero .tag{color:var(--muted);font-size:1.15rem;max-width:640px;margin:0 auto}
+.hero .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:20px 0 28px}
 .badge{font-size:.82rem;font-weight:500;color:var(--muted);border:1px solid var(--border);
   background:var(--panel);border-radius:999px;padding:5px 14px}
 .badge i{margin-right:6px;color:var(--green)}
-.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:2}
 .btn{display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:#fff;font-weight:600;
-  text-decoration:none;padding:15px 36px;border-radius:12px;font-size:1.02rem;
+  text-decoration:none;padding:16px 40px;border-radius:12px;font-size:1.05rem;
   box-shadow:0 10px 30px rgba(16,24,40,.25);transition:transform .15s,background .15s}
 .btn:hover{background:#232f45;transform:translateY(-2px)}
 .btn .dot{color:var(--red);font-size:.9em}
 .btn.ghost{background:var(--panel);box-shadow:none;color:var(--txt);border:1px solid var(--border)}
 .btn.ghost:hover{background:var(--card)}
+.cta-note{color:var(--dim);font-size:.85rem;margin-top:12px}
+/* ---------- window frame ---------- */
+.window{max-width:920px;margin:40px auto 0;background:var(--panel);border:1px solid var(--border);
+  border-radius:18px;box-shadow:0 40px 100px rgba(16,24,40,.18);overflow:hidden;text-align:left}
+.window .chrome{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.window .chrome i{width:12px;height:12px;border-radius:50%;font-size:0}
+.window .chrome i:nth-child(1){background:#ff5f57}
+.window .chrome i:nth-child(2){background:#febc2e}
+.window .chrome i:nth-child(3){background:#28c840}
+.window .chrome span{margin-left:8px;color:var(--dim);font-size:.85rem;font-weight:500}
+.window img{width:100%;display:block}
+/* ---------- stats strip ---------- */
+.strip{background:var(--ink);color:#fff;border-radius:var(--radius);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;
+  padding:28px 20px;margin-top:48px;text-align:center}
+.strip b{display:block;font-size:1.35rem;font-weight:700}
+.strip b i{color:var(--red);margin-right:8px}
+.strip span{color:#b9c4d6;font-size:.88rem}
 /* ---------- sections ---------- */
-section{padding:52px 0}
+section{padding:56px 0}
 .sec-head{text-align:center;margin-bottom:30px}
 .sec-head h2{font-size:1.8rem;font-weight:700;letter-spacing:-.3px}
 .sec-head h2 i{color:var(--red);margin-right:10px}
@@ -81,10 +103,9 @@ section{padding:52px 0}
   width:38px;height:38px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;
   display:flex;align-items:center;justify-content:center;font-size:1.05rem}
 .step h3{margin:6px 0;font-size:1rem;font-weight:600}
-.step p,.step code{color:var(--muted);font-size:.92rem}
-code{background:var(--card);border:1px solid var(--border);padding:2px 8px;border-radius:6px;font-family:Consolas,monospace;color:var(--cyan);font-size:.85em}
+.step p{color:var(--muted);font-size:.92rem}
 .kbd{background:var(--panel);border:1px solid var(--border);border-bottom-width:3px;border-radius:6px;
-  padding:2px 10px;font-family:Consolas,monospace;font-size:.88rem}
+  padding:2px 10px;font-family:Consolas,monospace;font-size:.88rem;white-space:nowrap}
 /* ---------- faq ---------- */
 details{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin:12px 0}
 details summary{cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:10px}
@@ -102,10 +123,9 @@ details p{color:var(--muted);margin-top:10px;font-size:.95rem}
 /* ---------- footer ---------- */
 footer{text-align:center;color:var(--muted);padding:32px 20px 44px;font-size:.9rem}
 footer a{color:var(--cyan);text-decoration:none}
-footer .social{display:flex;gap:16px;justify-content:center;margin-bottom:14px;font-size:1.3rem}
-footer .social a{color:var(--muted)}
-footer .social a:hover{color:var(--txt)}
-@media(max-width:640px){nav .links{display:none}nav .brand{font-size:.9rem}.hero{padding:60px 20px 44px}}
+footer .tiny{margin-top:10px;font-size:.8rem;color:var(--dim)}
+footer .tiny a{color:var(--dim);text-decoration:underline}
+@media(max-width:640px){nav .links a:not(.mini){display:none}nav .brand{font-size:.9rem}.hero{padding:56px 20px 0}}
 </style>
 </head>
 <body>
@@ -117,103 +137,118 @@ footer .social a:hover{color:var(--txt)}
     <a href="#recursos">Recursos</a>
     <a href="#telas">Telas</a>
     <a href="#uso">Como usar</a>
-    <a href="#faq">FAQ</a>
-    <a href="#download">Download</a>
+    <a href="#faq">Dúvidas</a>
+    <a class="mini" href="#download">Baixar grátis</a>
   </div>
 </div></nav>
 
 <header class="hero">
-  <img class="logo" src="docs/assets/logo-256.png" alt="Marca TremDeGravarOsTrem: monitor com ponto REC">
-  <h1>TremDeGravarOsTrem</h1>
-  <p class="tag">O trem que grava os trem da sua tela — com preview ao vivo, pausa e multitrilha.</p>
-  <div class="badges">
-    <span class="badge"><i class="fa-brands fa-windows"></i>Windows 10/11</span>
-    <span class="badge"><i class="fa-solid fa-gift"></i>Grátis</span>
-    <span class="badge"><i class="fa-solid fa-code-branch"></i>Open-source (MIT)</span>
-    <span class="badge"><i class="fa-solid fa-tag"></i>v0.0.1</span>
-  </div>
-  <div class="cta">
-    <a class="btn" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem/releases"><span class="dot">●</span>Baixar instalador</a>
-    <a class="btn ghost" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem"><i class="fa-brands fa-github"></i>Ver código</a>
+  <div class="wrap">
+    <span class="eyebrow"><span class="dot">●</span> Grátis para Windows · sem cadastro</span>
+    <h1>Grave sua tela apertando um botão</h1>
+    <p class="tag">Aulas, reuniões, jogos, tutoriais: escolha o que gravar, aperte o REC e receba o vídeo pronto para assistir e mandar.</p>
+    <div class="badges">
+      <span class="badge"><i class="fa-brands fa-windows"></i>Windows 10/11</span>
+      <span class="badge"><i class="fa-solid fa-video"></i>Vídeo em MP4</span>
+      <span class="badge"><i class="fa-solid fa-microphone"></i>Sua voz + som do PC</span>
+      <span class="badge"><i class="fa-solid fa-tag"></i>v0.0.1</span>
+    </div>
+    <div class="cta">
+      <a class="btn" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem/releases"><span class="dot">●</span>Baixar grátis</a>
+      <a class="btn ghost" href="#uso">Ver como funciona</a>
+    </div>
+    <p class="cta-note">Instalação de 1 minutinho, sem conta e sem pagar nada.</p>
+    <div class="window">
+      <div class="chrome"><i></i><i></i><i></i><span>TremDeGravarOsTrem</span></div>
+      <img src="docs/assets/screenshot.png" alt="Tela inicial do TremDeGravarOsTrem gravando a tela">
+    </div>
+    <div class="strip">
+      <div><b><i class="fa-solid fa-bolt"></i>3 cliques</b><span>até o vídeo pronto</span></div>
+      <div><b><i class="fa-solid fa-pause"></i>Pausa esperta</b><span>pausou, continuou, sem defeito</span></div>
+      <div><b><i class="fa-solid fa-folder-open"></i>Tudo seu</b><span>vídeos numa pasta do seu PC</span></div>
+      <div><b><i class="fa-solid fa-gift"></i>R$ 0</b><span>grátis de verdade</span></div>
+    </div>
   </div>
 </header>
 
 <section id="recursos"><div class="wrap">
   <div class="sec-head">
-    <h2><i class="fa-solid fa-wand-magic-sparkles"></i>O que o trem faz</h2>
-    <p>Tudo que um gravador de tela precisa — sem complicação.</p>
+    <h2><i class="fa-solid fa-wand-magic-sparkles"></i>Feito para quem só quer gravar</h2>
+    <p>Sem curso, sem configuração complicada.</p>
   </div>
   <div class="grid">
     <div class="card"><div class="ic"><i class="fa-solid fa-display"></i></div>
-      <h3>3 alvos de captura</h3><p>Tela inteira com multi-monitor, janela específica ou região livre desenhada na tela — com preview ao vivo durante a gravação.</p></div>
+      <h3>Grave o que você vê</h3><p>A tela inteira, só uma janela ou um pedacinho. Você acompanha tudo numa prévia ao vivo.</p></div>
     <div class="card"><div class="ic"><i class="fa-solid fa-microphone"></i></div>
-      <h3>Áudio multitrilha</h3><p>Mic + sistema mixados ou 3 faixas AAC separadas (mix, mic e sistema isolados), estilo OBS, com mixer ao vivo (VU, dB e osciloscópio).</p></div>
+      <h3>Sua voz e o som do PC</h3><p>Narre por cima do vídeo com o microfone, capture o som do jogo ou reunião — com medidor de volume na tela.</p></div>
     <div class="card"><div class="ic"><i class="fa-solid fa-pause"></i></div>
-      <h3>Pausa de verdade</h3><p>Pausar congela tudo e a pausa é cortada do MP4 — sem buraco na linha do tempo. Trio REC / Pausar / Parar na barra e na barrinha flutuante.</p></div>
+      <h3>Precisou parar? Pause</h3><p>Atendeu a porta no meio da gravação? Aperte pausar e continue depois: o vídeo sai inteirinho.</p></div>
     <div class="card"><div class="ic"><i class="fa-solid fa-chart-line"></i></div>
-      <h3>Painel e logs</h3><p>Histórico com duração, tamanho e totais, aba de logs com filtro por nível e pasta de saída configurável.</p></div>
+      <h3>Seus vídeos organizados</h3><p>Tudo salvo numa pasta sua, com lista, tamanho e duração. E foto da tela com um clique.</p></div>
     <div class="card"><div class="ic"><i class="fa-solid fa-keyboard"></i></div>
-      <h3>Atalhos e barrinha</h3><p><span class="kbd">F12</span> gravar/parar/retomar, <span class="kbd">F11</span> foto PNG e barrinha flutuante com timer e pausa.</p></div>
-    <div class="card"><div class="ic"><i class="fa-solid fa-folder-open"></i></div>
-      <h3>Do seu jeito</h3><p>FPS 10/15/30, presets Performance/Equilibrado, cursor no vídeo, timer na janela e MP4 H.264 + AAC.</p></div>
+      <h3>Fácil de apertar</h3><p>Botão vermelho de REC, <span class="kbd">F12</span> grava e para, <span class="kbd">F11</span> tira foto, e uma barrinha mostra o tempo.</p></div>
+    <div class="card"><div class="ic"><i class="fa-solid fa-feather"></i></div>
+      <h3>Leve e direto</h3><p>Abre rápido, roda liso e entrega MP4 — o formato que roda em tudo: celular, TV e computador.</p></div>
   </div>
 </div></section>
 
 <section id="telas"><div class="wrap">
   <div class="sec-head">
-    <h2><i class="fa-solid fa-image"></i>Carinha do trem</h2>
-    <p>Tema claro, fonte Poppins e ícones FontAwesome.</p>
+    <h2><i class="fa-solid fa-image"></i>Olha a carinha dele</h2>
+    <p>Claro, grande e com botão fácil de achar.</p>
   </div>
   <div class="shots">
-    <figure><img src="docs/assets/screenshot.png" alt="Tela inicial do TremDeGravarOsTrem"><figcaption>Gravar: preview, alvo, áudio e mixer</figcaption></figure>
-    <figure><img src="docs/assets/screenshot-dashboard.png" alt="Painel de gravações do TremDeGravarOsTrem"><figcaption>Painel: histórico e espaço em disco</figcaption></figure>
+    <figure><img src="docs/assets/screenshot.png" alt="Tela inicial do TremDeGravarOsTrem"><figcaption>Gravar: prévia, microfone e botão REC</figcaption></figure>
+    <figure><img src="docs/assets/screenshot-dashboard.png" alt="Lista de vídeos gravados"><figcaption>Seus vídeos: lista com tamanho e duração</figcaption></figure>
   </div>
 </div></section>
 
 <section id="uso"><div class="wrap">
   <div class="sec-head">
-    <h2><i class="fa-solid fa-list-check"></i>Do zero ao MP4 em 3 passos</h2>
+    <h2><i class="fa-solid fa-list-check"></i>Do zero ao vídeo em 3 passos</h2>
   </div>
   <div class="steps">
-    <div class="step"><h3>Instale</h3><p>Baixe o <code>GravaTrem-Setup-0.0.1.exe</code> na release — instalação por usuário, sem admin.</p></div>
-    <div class="step"><h3>Configure</h3><p>Escolha alvo, áudio e FPS. Na primeira vez o app pergunta onde salvar (padrão: <code>Documentos\TremDeGravarOsTrem</code>). Do fonte: <code>pip install -r requirements.txt &amp;&amp; python app.py</code></p></div>
-    <div class="step"><h3>Grave</h3><p>Aperte <span class="kbd">F12</span>, pause se precisar e pare para salvar o MP4 com preview ao vivo o tempo todo.</p></div>
+    <div class="step"><h3>Baixe e instale</h3><p>Um minutinho, sem conta e sem pagar. Na primeira vez ele pergunta onde guardar seus vídeos.</p></div>
+    <div class="step"><h3>Escolha e aperte o REC</h3><p>Marque a tela e o microfone, confira as barrinhas de volume e aperte o botão vermelho (ou <span class="kbd">F12</span>).</p></div>
+    <div class="step"><h3>Pronto, tá gravado</h3><p>Pare quando quiser: o vídeo cai na sua pasta, pronto para assistir, mandar no zap ou postar.</p></div>
   </div>
 </div></section>
 
 <section id="faq"><div class="wrap">
   <div class="sec-head">
-    <h2><i class="fa-solid fa-circle-question"></i>Perguntas de mineiro</h2>
+    <h2><i class="fa-solid fa-circle-question"></i>Dúvidas frequentes</h2>
   </div>
-  <details><summary><i class="fa-solid fa-volume-xmark"></i>Uai, cadê o áudio do sistema?</summary>
-    <p>Precisa de dispositivo WASAPI com loopback. Sem ele, o app esconde os modos com sistema sozinho — mic e vídeo seguem normais.</p></details>
-  <details><summary><i class="fa-solid fa-pause"></i>A pausa deixa buraco no vídeo?</summary>
-    <p>Não: a pausa é cortada da linha do tempo — o MP4 final tem só o conteúdo, com timer e trilhas contínuos.</p></details>
-  <details><summary><i class="fa-solid fa-layer-group"></i>Como funcionam as trilhas separadas?</summary>
-    <p>Com Mic + sistema e a opção ligada, o MP4 sai com 3 faixas AAC: mix, mic isolado e sistema isolado — dá para mutar ou remixar depois em qualquer editor.</p></details>
-  <details><summary><i class="fa-solid fa-shield-halved"></i>O antivírus implicou com o instalador?</summary>
-    <p>O exe ainda não tem assinatura digital: libere a pasta ou o arquivo. Assinatura entra no roadmap.</p></details>
-  <details><summary><i class="fa-solid fa-handshake-angle"></i>Posso ajudar no projeto?</summary>
-    <p>Uai, claro! O repo tem guia de contribuição, pipeline de build de 1 comando e docs de arquitetura e design system.</p></details>
+  <details><summary><i class="fa-solid fa-folder-open"></i>Onde ficam meus vídeos?</summary>
+    <p>Na pasta Documentos, dentro de TremDeGravarOsTrem. Dentro do programa tem botão de abrir a pasta direto.</p></details>
+  <details><summary><i class="fa-solid fa-gear"></i>Preciso configurar alguma coisa?</summary>
+    <p>Não. É só escolher a tela e o microfone e apertar o REC. O resto já vem ajustado.</p></details>
+  <details><summary><i class="fa-solid fa-computer"></i>Vai travar meu computador?</summary>
+    <p>Ele foi feito para ser leve. Se o PC for mais fraquinho, feche programas pesados antes de gravar.</p></details>
+  <details><summary><i class="fa-solid fa-volume-high"></i>Grava o som do jogo ou da reunião?</summary>
+    <p>Sim: ele grava o microfone e o som do computador, juntos ou separados.</p></details>
+  <details><summary><i class="fa-solid fa-gift"></i>É grátis mesmo?</summary>
+    <p>É. Sem cadastro, sem período de teste, sem marca d'água no vídeo.</p></details>
+  <details><summary><i class="fa-solid fa-shield-halved"></i>O antivírus implicou. E agora?</summary>
+    <p>O programa ainda não tem aquele selo digital pago, então o antivírus pode desconfiar. É só liberar o arquivo uma vez.</p></details>
 </div></section>
 
 <section id="download"><div class="wrap"><div class="dl">
   <h2>Bora gravar uns trem?</h2>
-  <p>Baixe o instalador na página de releases do GitHub.</p>
+  <p>Baixe agora, de graça, e faça seu primeiro vídeo em 5 minutos.</p>
   <a class="btn" href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem/releases/tag/0.0.1"><i class="fa-solid fa-download"></i>TremDeGravarOsTrem 0.0.1</a>
   <div class="req">
     <span><i class="fa-solid fa-check"></i>Windows 10/11 64-bit</span>
-    <span><i class="fa-solid fa-check"></i>Sem cadastro, sem paywall</span>
-    <span><i class="fa-solid fa-check"></i>MP4 H.264 + AAC</span>
+    <span><i class="fa-solid fa-check"></i>Instala sem ser admin</span>
+    <span><i class="fa-solid fa-check"></i>Vídeo em MP4 universal</span>
   </div>
 </div></div></section>
 
 <footer>
   <div class="social">
     <a href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
-    <a href="https://github.com/ryan-junio-oliveira" aria-label="Autor"><i class="fa-solid fa-user-astronaut"></i></a>
   </div>
-  TremDeGravarOsTrem · Licença MIT · Feito em Minas Gerais <i class="fa-solid fa-mountain"></i>
+  TremDeGravarOsTrem · Grátis (licença MIT) · Feito em Minas Gerais <i class="fa-solid fa-mountain"></i>
+  <p class="tiny">É desenvolvedor? <a href="https://github.com/ryan-junio-oliveira/TremDeGravarOsTrem">Código-fonte no GitHub</a></p>
 </footer>
 
 </body>

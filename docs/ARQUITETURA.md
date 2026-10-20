@@ -108,9 +108,10 @@ com seu par `isLoopbackDevice` pelo nome; sem `pyaudiowpatch` ou sem par,
   `QImage` e emite `preview_ready(QImage, vw, vh)`; guardas `_pv_busy`
   + `_pv_last_emit` (1.5 s) evitam acúmulo se o DWM engasgar. Durante a
   gravação o preview pausa (retorna cedo se `stop_event` ativo).
-- `FloatBar`: barrinha `FramelessWindowHint|StaysOnTop|Tool` com
-  menu/resolução/alvo/timer/REC/foto/fechar; arrastável; fixada no topo
-  da tela (rente à borda superior); `tick(s)` formata `HH:MM:SS`.
+- `FloatBar`: pill clara 16px + `BORDER`, timer mono
+  12pt/700, alvo em chip `CARD`, `● REC` tinta, `❚❚` pausa, `■` parar
+  (o X foi removido: sugeria fechar/descartar), foto e menu;
+  arrastável; fixada no topo da tela; `tick(s)` formata `HH:MM:SS`.
 - `RegionPicker`: `QDialog` fullscreen translúcido cobrindo a união de
   todos os monitores (`QGuiApplication.screens()`), `QRubberBand`,
   mínimo 64x64, ESC cancela, coordenadas convertidas para o espaço

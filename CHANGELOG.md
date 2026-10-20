@@ -31,6 +31,8 @@
   visíveis; seletor trava durante a gravação.
 - REC sem vermelhão: `#recbtn`/`#start`/FloatBar em tinta escura com dot
   vermelho; marca da sidebar em `TremDeGravarOsTrem`.
+- Barrinha flutuante com `■` de stop no lugar do X (X sugeria
+  fechar/descartar a gravação).
 - Multitrilha de áudio estilo OBS: toggle no card de áudio grava 3 faixas
   AAC (mix + mic + sistema isolados, nomeadas); última gravação mostra
   "N faixas"; com uma fonte só, faixa única automática.

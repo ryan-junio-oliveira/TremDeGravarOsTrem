@@ -235,7 +235,7 @@ Mapa vigente (nome → cor → tamanho):
 |---|---|---|---|
 | nav Gravar/Gravações/Logs/Sobre | `video` / `film` / `file-alt` / `cog` | `TXT` | 20 |
 | seg Tela/Janela/Região | `desktop` / `window-maximize` / `vector-square` | `MUTED` (`WHITE` c/ ativo) | 15 |
-| FloatBar menu/foto/fechar | `bars` / `camera` / `times` | `TXT` | 20 |
+| FloatBar menu/foto/parar | `bars` / `camera` / `square` | `TXT` | 20 |
 | toolbar mic/foto | `microphone` / `camera` | `TXT` (`WHITE` c/ mic on) | 20 |
 | fonte de áudio (combo) | `headset` / `microphone` / `volume-up` / `volume-mute` | `MUTED` | 16 (nativo) |
 | Iniciar/Parar | `circle` / `square` | `RED` / `WHITE` | 14 |

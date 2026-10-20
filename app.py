@@ -260,9 +260,9 @@ class FloatBar(QWidget):
         self.btn_shot = self._ibtn("fa5s.camera", "Foto (F11)")
         self.btn_shot.clicked.connect(self.main.screenshot)
         lay.addWidget(self.btn_shot)
-        self.btn_x = self._ibtn("fa5s.times", "Parar e fechar a barra")
-        self.btn_x.clicked.connect(self._on_x)
-        lay.addWidget(self.btn_x)
+        self.btn_stop = self._ibtn("fa5s.square", "Parar gravação")
+        self.btn_stop.clicked.connect(self._on_stop_clicked)
+        lay.addWidget(self.btn_stop)
         outer.addWidget(pill)
         self._drag = None
 
@@ -277,7 +277,9 @@ class FloatBar(QWidget):
         b.setCursor(Qt.PointingHandCursor)
         return b
 
-    def _on_x(self):
+    def _on_stop_clicked(self):
+        # Único botão de parada da barrinha: salva (via on_stop, que já
+        # esconde a barra). X foi aposentado: sugeria "fechar/descartar".
         if self.main.stop_event is not None:
             self.main.on_stop()
         self.hide()
